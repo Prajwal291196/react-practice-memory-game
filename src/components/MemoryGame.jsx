@@ -1,16 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./memory-game.css"
 
 
-const shuffleArray = (array) => {
-  return array.map(item => ({ item, sort: Math.random() })).sort((a, b) => (a.sort - b.sort)).map(({ item }) => item)
-}
+
 
 const MemoryGame = ({ images }) => {
-  const duplicatedImages = [...images, ...images]
-  const shuffledImages = shuffleArray(duplicatedImages)
-  const [flipped, setFlipped] = useState(Array(shuffledImages.length).fill(false))
-  
+  const [duplicatedImages, setDuplicatedImages] = useState([])
+  const [shuffledImages, setShuffledImages] = useState([])
+  const [flipped, setFlipped] = useState([])
+
+  useEffect(() => {
+    setDuplicatedImages([...images, ...images])
+
+  }, [images])
+
+  useEffect(() => {
+    if (duplicatedImages.length > 0) {
+      setShuffledImages(duplicatedImages.map(item => ({ item, sort: Math.random() })).sort((a, b) => (a.sort - b.sort)).map(({ item }) => item))
+    }
+  }, [duplicatedImages])
+
 
   const handleFlip = (index) => {
     const updated = [...flipped];
@@ -18,7 +27,8 @@ const MemoryGame = ({ images }) => {
     setFlipped(updated);
   }
 
-  console.log(shuffledImages)
+  console.log("duplicatedImages", duplicatedImages)
+  console.log("shuffledImages", shuffledImages)
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
       <h1>Memory Game</h1>
