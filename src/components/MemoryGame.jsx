@@ -1,30 +1,29 @@
 import { useEffect, useState } from "react";
 import "./memory-game.css"
 
-
-
-
 const MemoryGame = ({ images }) => {
-  const [duplicatedImages, setDuplicatedImages] = useState([])
   const [shuffledImages, setShuffledImages] = useState([])
   const [flipped, setFlipped] = useState([])
   const [selected, setSelected] = useState([])
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameOver, setGameOver] = useState(false)
 
-  useEffect(() => {
-    setDuplicatedImages([...images, ...images])
+  const initializeGame = () => {
+    const duplicated = [...images, ...images]
 
-  }, [images])
-
-  useEffect(() => {
-
-    if (duplicatedImages.length > 0) {
-      const shuffled = duplicatedImages.map(item => ({ item, sort: Math.random() })).sort((a, b) => (a.sort - b.sort)).map(({ item }) => item)
-
+    if (duplicated.length > 0) {
+      const shuffled = duplicated.map(item => ({ item, sort: Math.random() })).sort((a, b) => (a.sort - b.sort)).map(({ item }) => item)
       setShuffledImages(shuffled)
       setFlipped(Array(shuffled.length).fill(false))
     }
 
-  }, [duplicatedImages])
+    setGameOver(false)
+    setGameStarted(true);
+  }
+
+  useEffect(() => {
+    
+  }, [images])
 
   const handleFlip = (index) => {
     if (flipped[index] === true) return;
@@ -33,58 +32,67 @@ const MemoryGame = ({ images }) => {
     updated[index] = !updated[index];
     setFlipped(updated);
 
-    const checkSelected = [...selected, { "value": shuffledImages[index], "index": index, "flipped": true }]
+    const checkSelected = [...selected, { "value": shuffledImages[index], "index": index }]
     setSelected(checkSelected)
 
     if (checkSelected.length == 2) {
       const [first, second] = checkSelected;
       if (first.value === second.value) {
-        console.log("Match found")
         setSelected([])
       }
       else {
-        console.log("No match found")
-        console.log(checkSelected.shift())
-        console.log("checkSelected", checkSelected)
+        checkSelected.shift()
         const reverted = [...updated]
         reverted[first.index] = false
         setFlipped(reverted)
       }
     }
-    
 
+    if (updated.every(val => val === true)) {
+      setTimeout(() => setGameOver(true), 1000)
+    }
   }
-  console.log("outer checkselected", selected)
-  // console.log("duplicatedImages", duplicatedImages)
-  // console.log("shuffledImages", shuffledImages)
-  console.log("flipped", flipped)
-  console.log(selected)
+
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
       <h1>Memory Game</h1>
-      <p>Build your memory game! </p>
-      <p>Here are the sample images:</p>
-      <div className="cards-container">
+      {!gameStarted ? (
+        <div className="start-screen">
+          <h2>Welcome to the Memory Game</h2>
+          <p>Flip and match all the cards to win!</p>
+          <button onClick={initializeGame} className="start-btn">
+            Start Game
+          </button>
+        </div>
+      ) : gameOver ? (
+        <div className="game-over">
+          <h2>🎉 Game Over! You Matched All Cards 🎉</h2>
+          <button onClick={initializeGame} className="restart-btn">
+            Restart Game
+          </button>
+        </div>) :
+        (<div className="cards-container">
 
-        {shuffledImages.map((src, index) => (
-          <div
-            key={index}
-            className={`card ${flipped[index] ? "flipped" : ""}`}
-            onClick={() => handleFlip(index)}
-          >
-            <div className="card-inner">
-              <div className="card-front"></div>
-              <div className="card-back">
-                <img
-                  key={index}
-                  src={src}
-                  className="card-image"
-                />
+          {shuffledImages.map((src, index) => (
+            <div
+              key={index}
+              className={`card ${flipped[index] ? "flipped" : ""}`}
+              onClick={() => handleFlip(index)}
+            >
+              <div className="card-inner">
+                <div className="card-front"></div>
+                <div className="card-back">
+                  <img
+                    key={index}
+                    src={src}
+                    className="card-image"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>)
+      }
     </div>
   );
 };
